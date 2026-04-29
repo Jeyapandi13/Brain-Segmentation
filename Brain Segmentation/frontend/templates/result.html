@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result - Brain Tumor Detection AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            top: -250px;
+            right: -250px;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            bottom: -150px;
+            left: -150px;
+            animation-duration: 8s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(20px) rotate(5deg); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* Image Section */
+        .image-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .image-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeUp 0.6s ease-out backwards;
+        }
+
+        .image-card:nth-child(1) { animation-delay: 0.1s; }
+        .image-card:nth-child(2) { animation-delay: 0.2s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .image-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .image-card.segmented .image-card-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .image-card-header span {
+            font-size: 1.5rem;
+        }
+
+        .image-card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .image-wrapper {
+            position: relative;
+            background: #1a1a2e;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .image-wrapper:hover img {
+            transform: scale(1.05);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-wrapper:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .zoom-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Results Grid */
+        .results-section {
+            margin-bottom: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            animation: fadeUp 0.6s ease-out backwards;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0.3s; }
+        .result-card:nth-child(2) { animation-delay: 0.4s; }
+        .result-card:nth-child(3) { animation-delay: 0.5s; }
+
+        .result-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-card.detected {
+            border-left-color: #e74c3c;
+            background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
+        }
+
+        .result-card.not-detected {
+            border-left-color: #27ae60;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .result-card.tumor-type {
+            border-left-color: #f39c12;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .result-card.risk {
+            border-left-color: #e67e22;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        /* Risk Bar */
+        .risk-bar-container {
+            margin-top: 12px;
+        }
+
+        .risk-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s ease-out;
+        }
+
+        .risk-low { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .risk-medium { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .risk-high { background: linear-gradient(90deg, #e67e22, #d35400); }
+        .risk-critical { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+        /* Summary */
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeUp 0.6s ease-out 0.6s backwards;
+        }
+
+        .summary-box h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .summary-box p {
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+            animation: fadeUp 0.6s ease-out 0.7s backwards;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(39, 174, 96, 0.5);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #f59e0b;
+            animation: fadeUp 0.6s ease-out 0.8s backwards;
+        }
+
+        .disclaimer p {
+            color: #92400e;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 15px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-close {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            font-size: 50px;
+            color: white;
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        .modal-close:hover {
+            color: #e74c3c;
+            transform: rotate(90deg);
+        }
+
+        .modal-caption {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            color: white;
+            cursor: pointer;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-nav:hover {
+            color: #667eea;
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .modal-prev { left: 20px; }
+        .modal-next { right: 20px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 25px; }
+            h1 { font-size: 1.8rem; }
+            .images-grid { grid-template-columns: 1fr; }
+            .image-wrapper img { height: 250px; }
+            .action-buttons { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="result-icon">🔬</div>
+            <h1>Analysis Complete</h1>
+            <p class="subtitle">AI-Powered Brain Tumor Detection Results</p>
+        </div>
+
+        <!-- Image Display Section -->
+        <div class="image-section">
+            <h2 class="section-title">
+                <span>🖼️</span> MRI Scan Analysis
+            </h2>
+            
+            <div class="images-grid">
+                <!-- Original Uploaded Image -->
+                <div class="image-card">
+                    <div class="image-card-header">
+                        <span>🧠</span>
+                        <h3>Original MRI Scan</h3>
+                    </div>
+                    <div class="image-wrapper" onclick="openModal('{{ uploaded_image }}', 'Original MRI Scan')">
+                        <img src="{{ uploaded_image }}" alt="Uploaded MRI Scan" id="originalImage">
+                        <div class="image-overlay">
+                            <span class="zoom-btn">🔍 Click to Zoom</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segmented Image -->
+                <div class="image-card segmented">
+                    <div class="image-card-header">
+                        <span>🎯</span>
+                        <h3>Tumor Segmentation</h3>
+                    </div>
+                    <div class="image-wrapper" onclick="openModal('{{ segmented_image }}', 'Tumor Segmentation')">
+                        <img src="{{ segmented_image }}" alt="Segmented Result" id="segmentedImage"
+                             onerror="this.src='{{ uploaded_image }}'; this.parentElement.parentElement.querySelector('h3').textContent='Analysis Overlay';">
+                        <div class="image-overlay">
+                            <span class="zoom-btn">🔍 Click to Zoom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <h2 class="section-title">
+                <span>📊</span> Detection Results
+            </h2>
+
+            <div class="results-grid">
+                <!-- Tumor Detection -->
+                <div class="result-card {{ 'detected' if tumor == 'Yes' else 'not-detected' }}">
+                    <div class="card-icon">{{ '⚠️' if tumor == 'Yes' else '✅' }}</div>
+                    <div class="card-content">
+                        <div class="card-label">Tumor Detection</div>
+                        <div class="card-value">
+                            <span class="status-badge {{ 'badge-danger' if tumor == 'Yes' else 'badge-success' }}">
+                                {{ 'Tumor Detected' if tumor == 'Yes' else 'No Tumor Found' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tumor Type -->
+                <div class="result-card tumor-type">
+                    <div class="card-icon">🧬</div>
+                    <div class="card-content">
+                        <div class="card-label">Classification Type</div>
+                        <div class="card-value">{{ tumor_type }}</div>
+                    </div>
+                </div>
+
+                <!-- Risk Level -->
+                <div class="result-card risk">
+                    <div class="card-icon">📈</div>
+                    <div class="card-content">
+                        <div class="card-label">Risk Assessment</div>
+                        <div class="card-value">{{ risk }}%</div>
+                        <div class="risk-bar-container">
+                            <div class="risk-bar">
+                                <div class="risk-fill 
+                                    {% if risk < 25 %}risk-low
+                                    {% elif risk < 50 %}risk-medium
+                                    {% elif risk < 75 %}risk-high
+                                    {% else %}risk-critical{% endif %}"
+                                    id="riskBar" data-width="{{ risk }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-box">
+            <h3>📋 Analysis Summary</h3>
+            <p>
+                {% if tumor == 'Yes' %}
+                    The AI system has detected a potential tumor in the MRI scan. 
+                    The abnormality has been classified as <strong>{{ tumor_type }}</strong> 
+                    with a confidence/risk level of <strong>{{ risk }}%</strong>.
+                    Please consult a medical professional immediately for proper diagnosis.
+                {% else %}
+                    Great news! The AI analysis did not detect any signs of tumor in the MRI scan.
+                    However, please consult with a healthcare professional for confirmation.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary">
+                🔄 Upload Another Scan
+            </a>
+            <button class="btn btn-success" onclick="downloadReport()">
+                📥 Download Report
+            </button>
+            <button class="btn btn-outline" onclick="window.print()">
+                🖨️ Print Results
+            </button>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <p>
+                <strong>⚠️ Medical Disclaimer:</strong> 
+                This AI analysis is for research and screening purposes only. 
+                It should NOT replace professional medical diagnosis. 
+                Always consult qualified healthcare professionals for medical decisions.
+            </p>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <span class="modal-nav modal-prev" onclick="changeImage(-1)">❮</span>
+        <span class="modal-nav modal-next" onclick="changeImage(1)">❯</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+            <p id="modalCaption" class="modal-caption"></p>
+        </div>
+    </div>
+
+    <script>
+        // Image data for modal navigation
+        const images = [
+            { src: "{{ uploaded_image }}", caption: "Original MRI Scan" },
+            { src: "{{ segmented_image }}", caption: "Tumor Segmentation" }
+        ];
+        let currentImageIndex = 0;
+
+        // Animate risk bar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const riskBar = document.getElementById('riskBar');
+            const targetWidth = riskBar.dataset.width;
+            
+            setTimeout(() => {
+                riskBar.style.width = targetWidth + '%';
+            }, 300);
+        });
+
+        // Modal functions
+        function openModal(src, caption) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const modalCaption = document.getElementById('modalCaption');
+            
+            currentImageIndex = images.findIndex(img => img.src === src);
+            
+            modal.style.display = 'block';
+            modalImg.src = src;
+            modalCaption.textContent = caption;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function changeImage(direction) {
+            currentImageIndex += direction;
+            
+            if (currentImageIndex >= images.length) currentImageIndex = 0;
+            if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+            
+            document.getElementById('modalImage').src = images[currentImageIndex].src;
+            document.getElementById('modalCaption').textContent = images[currentImageIndex].caption;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('imageModal').style.display === 'block') {
+                if (e.key === 'Escape') closeModal();
+                if (e.key === 'ArrowLeft') changeImage(-1);
+                if (e.key === 'ArrowRight') changeImage(1);
+            }
+        });
+
+        // Download report
+        function downloadReport() {
+            const report = `
+╔════════════════════════════════════════════════════════════════╗
+║        BRAIN TUMOR DETECTION AI - ANALYSIS REPORT              ║
+╚════════════════════════════════════════════════════════════════╝
+
+📅 Date: ${new Date().toLocaleString()}
+📁 File: {{ filename }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔬 ANALYSIS RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   🧠 Tumor Detection:     {{ tumor }}
+   🧬 Tumor Type:          {{ tumor_type }}
+   📊 Risk Percentage:     {{ risk }}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ DISCLAIMER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This AI analysis is for research purposes only.
+Consult a healthcare professional for medical decisions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by Brain Tumor Detection AI © ${new Date().getFullYear()}
+`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `brain_tumor_report_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+</body>
+
+</html>

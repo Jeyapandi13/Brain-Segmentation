@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Tumor Detection Flow Diagram</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #2563eb;
+      --text: #111827;
+      --muted: #4b5563;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .diagram-panel {
+      background: #fff;
+      border: 1px solid #dbe3f0;
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    svg {
+      width: 100%;
+      min-width: 760px;
+      height: auto;
+      display: block;
+    }
+
+    .node {
+      fill: var(--card);
+      stroke: #93c5fd;
+      stroke-width: 2;
+      rx: 10;
+    }
+
+    .node-title {
+      font-size: 15px;
+      font-weight: 700;
+      fill: var(--text);
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .node-sub {
+      font-size: 12px;
+      fill: var(--muted);
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .arrow {
+      stroke: var(--line);
+      stroke-width: 2.5;
+      fill: none;
+      marker-end: url(#arrowHead);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Simple Project Flow Diagram</h1>
+    <p>Brain Tumor Detection app flow based on your current code.</p>
+
+    <div class="toolbar">
+      <button id="downloadBtn">Download Diagram as PNG</button>
+    </div>
+
+    <div class="diagram-panel">
+      <svg id="flowSvg" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" aria-label="Flow Diagram">
+        <defs>
+          <marker id="arrowHead" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+            <polygon points="0 0, 10 4, 0 8" fill="#2563eb"></polygon>
+          </marker>
+        </defs>
+
+        <!-- Nodes -->
+        <rect class="node" x="300" y="30" width="300" height="70" />
+        <text class="node-title" x="450" y="58">User Uploads MRI</text>
+        <text class="node-sub" x="450" y="80">index.html -> POST /predict</text>
+
+        <rect class="node" x="300" y="140" width="300" height="70" />
+        <text class="node-title" x="450" y="168">Flask Validation</text>
+        <text class="node-sub" x="450" y="190">type check + save unique file</text>
+
+        <rect class="node" x="300" y="250" width="300" height="70" />
+        <text class="node-title" x="450" y="278">Model Prediction</text>
+        <text class="node-sub" x="450" y="300">ResNet18 + softmax + risk</text>
+
+        <rect class="node" x="300" y="360" width="300" height="70" />
+        <text class="node-title" x="450" y="388">Overlay Generation</text>
+        <text class="node-sub" x="450" y="410">OpenCV segmented output image</text>
+
+        <rect class="node" x="300" y="470" width="300" height="70" />
+        <text class="node-title" x="450" y="498">Render Result Page</text>
+        <text class="node-sub" x="450" y="520">tumor, type, risk, images</text>
+
+        <!-- Arrows -->
+        <line class="arrow" x1="450" y1="100" x2="450" y2="140" />
+        <line class="arrow" x1="450" y1="210" x2="450" y2="250" />
+        <line class="arrow" x1="450" y1="320" x2="450" y2="360" />
+        <line class="arrow" x1="450" y1="430" x2="450" y2="470" />
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById("downloadBtn");
+    const svg = document.getElementById("flowSvg");
+
+    btn.addEventListener("click", () => {
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1800;
+        canvas.height = 1240;
+
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "brain_flow_diagram.png";
+          link.click();
+          URL.revokeObjectURL(link.href);
+        }, "image/png");
+
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+    });
+  </script>
+</body>
+</html>
